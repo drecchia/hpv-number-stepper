@@ -18,7 +18,7 @@
             & .stepper-button {
                 background: none;
                 border: none;
-                padding: 0.5em 0.75em;
+                padding: 0.3em 0.75em;
                 font-size: 1.25em;
                 cursor: pointer;
                 color: #555;
@@ -63,7 +63,7 @@
     <div id="stepper-container-root"></div>
 
     <script>
-        class NumberStepper {
+        class HpvNumberStepper {
             constructor({
                 initialValue = 0,
                 min = 0,
@@ -92,7 +92,7 @@
                 this.input = document.createElement('input');
                 this.input.type = 'text';
                 this.input.className = 'stepper-input';
-                this.input.value = this.onRender(this.value);
+                this.input.value = this.onRender(this.value, this);
 
                 if ( layout[0] == 'input' ) {
                     this.input.classList.add('stepper-input-left');
@@ -102,13 +102,31 @@
                 this.btnPlus.textContent = '+';
                 this.btnPlus.className = 'stepper-button';
 
-                // Event listeners
-                this.btnMinus.addEventListener('click', () => this._changeValue(-this.stepSize));
-                this.btnPlus.addEventListener('click', () => this._changeValue(this.stepSize));
-                this.input.addEventListener('change', () => {
+                // Store event handlers for cleanup
+                this._minusHandler = () => this._changeValue(-this.stepSize);
+                this._plusHandler = () => this._changeValue(this.stepSize);
+                this._inputHandler = () => {
                     const parsed = this._parseInput(this.input.value);
                     this._updateValue(parsed);
-                });
+                };
+                this._keydownHandler = (e) => {
+                    if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        this._changeValue(this.stepSize);
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        this._changeValue(-this.stepSize);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.input.blur(); // Remove focus from input
+                    }
+                };
+
+                // Event listeners
+                this.btnMinus.addEventListener('click', this._minusHandler);
+                this.btnPlus.addEventListener('click', this._plusHandler);
+                this.input.addEventListener('change', this._inputHandler);
+                this.input.addEventListener('keydown', this._keydownHandler);
 
                 // Build layout
                 const elementMap = {
@@ -143,12 +161,42 @@
                 });
 
                 if (typeof onCreate === 'function') {
-                    onCreate(this.value);
+                    onCreate(this.value, this);
                 }
             }
 
             mountTo(element) {
                 element.appendChild(this.container);
+            }
+
+            setValue(newValue) {
+                const parsed = typeof newValue === 'string' ? this._parseInput(newValue) : newValue;
+                this._updateValue(parsed);
+            }
+
+            getValue(rendered = false) {
+                return rendered ? this.onRender(this.value, this) : this.value;
+            }
+
+            destroy() {
+                // Remove event listeners
+                this.btnMinus.removeEventListener('click', this._minusHandler);
+                this.btnPlus.removeEventListener('click', this._plusHandler);
+                this.input.removeEventListener('change', this._inputHandler);
+                this.input.removeEventListener('keydown', this._keydownHandler);
+                
+                // Remove from DOM if mounted
+                if (this.container.parentNode) {
+                    this.container.parentNode.removeChild(this.container);
+                }
+                
+                // Clear references
+                this.container = null;
+                this.btnMinus = null;
+                this.btnPlus = null;
+                this.input = null;
+                this.onChange = null;
+                this.onRender = null;
             }
 
             _parseInput(inputText) {
@@ -163,10 +211,10 @@
             _updateValue(newVal) {
                 const sanitized = this._sanitize(newVal);
                 this.value = sanitized;
-                this.input.value = this.onRender(sanitized);
+                this.input.value = this.onRender(sanitized, this);
                 
                 if (typeof this.onChange === 'function') {
-                    this.onChange(sanitized);
+                    this.onChange(sanitized, this);
                 }
             }
 
@@ -177,14 +225,14 @@
 
         // Example usage
         const root = document.getElementById('stepper-container-root');
-        const stepper = new NumberStepper({
+        const stepper = new HpvNumberStepper({
             initialValue: 5,
             min: 0,
             max: 50,
             stepSize: 0.5,
-            onCreate: (val) => console.log('Stepper created with:', val),
-            onChange: (val) => console.log('Value changed:', val),
-            onRender: (val) => `${val.toFixed(1)} %`,
+            onCreate: (val, instance) => console.log('Stepper created with:', val, instance),
+            onChange: (val, instance) => console.log('Value changed:', val, instance),
+            onRender: (val, instance) => `${val.toFixed(1)} %`,
             layout: [ 'minus', 'input', 'plus' ] // Change element order
         });
 
