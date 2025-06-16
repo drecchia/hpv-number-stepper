@@ -1,6 +1,6 @@
 {
     "name": "hpv-number-stepper",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": "Danilo T Recchia",
     "main": "dist/js/all.min.js",
     "files": [
@@ -26,6 +26,8 @@
         "gulp-autoprefixer": "^8.0.0",
         "gulp-clean-css": "^4.3.0",
         "gulp-concat": "^2.6.1",
-        "gulp-uglify": "^3.0.2"
+        "gulp-postcss": "^10.0.0",
+        "gulp-uglify": "^3.0.2",
+        "postcss-nested": "^7.0.2"
     }
 }
