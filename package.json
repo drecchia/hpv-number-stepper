@@ -1,0 +1,31 @@
+{
+    "name": "hpv-number-stepper",
+    "version": "1.0.0",
+    "author": "Danilo T Recchia",
+    "main": "dist/js/all.min.js",
+    "files": [
+        "dist/js/all.min.js",
+        "dist/css/all.css"
+    ],
+    "license": "CC-BY-NC-4.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/drecchia/hpv-number-stepper.git"
+    },
+    "description": "Zero-dependency JavaScript library for building interactive number steppers.",
+    "keywords": [
+        "number-stepper",
+        "vanilla-js",
+        "zero-dependency"
+    ],
+    "scripts": {
+        "build": "gulp default"
+    },
+    "devDependencies": {
+        "gulp": "^4.0.2",
+        "gulp-autoprefixer": "^8.0.0",
+        "gulp-clean-css": "^4.3.0",
+        "gulp-concat": "^2.6.1",
+        "gulp-uglify": "^3.0.2"
+    }
+}
