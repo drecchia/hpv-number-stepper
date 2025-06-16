@@ -6,6 +6,12 @@ A zero-dependency JavaScript library for building interactive number steppers wi
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 ![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
 
+## Screenshots
+
+![HPV Number Stepper Example](docs/images/Screenshot_2.png)
+
+![HPV Number Stepper in Action](docs/images/Screenshot_3.png)
+
 ## Features
 
 - 🚀 **Zero dependencies** - Pure vanilla JavaScript
@@ -86,6 +92,8 @@ const stepper = new HpvNumberStepper({
 });
 ```
 
+![Basic Number Stepper](docs/images/Screenshot_2.png)
+
 ### Custom Layout
 
 ```javascript
@@ -109,6 +117,8 @@ const stepper = new HpvNumberStepper({
     }
 });
 ```
+
+![Percentage Stepper Example](docs/images/Screenshot_3.png)
 
 ### Currency Stepper
 
