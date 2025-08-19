@@ -8,9 +8,11 @@ A zero-dependency JavaScript library for building interactive number steppers wi
 
 ## Screenshots
 
-![HPV Number Stepper Example](docs/images/Screenshot_2.png)
+![HPV Number Stepper Example](docs/images/Screenshot_1.png)
 
-![HPV Number Stepper in Action](docs/images/Screenshot_3.png)
+![HPV Number Stepper in Action](docs/images/Screenshot_3_multi.png)
+
+![HPV List Stepper Example](docs/images/Screenshot_4_multi.png)
 
 ## Features
 
@@ -92,6 +94,50 @@ const stepper = new HpvNumberStepper({
 });
 ```
 
+## List Stepper (select from items)
+
+Alongside numeric steppers, the library provides a list-based stepper that cycles through a list of `{ id, label }` items. It preserves the same layout, keyboard, and lifecycle behavior as `HpvNumberStepper`, but renders the current item label and wraps around when reaching the ends.
+
+### Usage
+
+```javascript
+const countries = [
+    { id: 'us', label: 'United States' },
+    { id: 'ca', label: 'Canada' },
+    { id: 'mx', label: 'Mexico' }
+];
+
+const stepper = new HpvListStepper({
+    items: countries,
+    initialValue: 'us', // can be an id or a zero-based index
+    onRender: (item) => item.label, // default behavior
+    onChange: (item, index) => console.log('Selected:', item, index),
+    layout: ['minus', 'input', 'plus']
+});
+
+stepper.mountTo(document.getElementById('country-stepper'));
+```
+
+### Options (additions)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `items` | Array<{ id: string, label: string, ... }>| `[]` | Source list of selectable items |
+| `initialValue` | string | number | `0` | Can be an item `id` or a zero-based index |
+| `onRender` | Function | `(item, index) => item?.label || ''` | Renders the displayed text for the selected item |
+| `onChange` | Function | `undefined` | Called with `(item, index, instance)` on selection change |
+
+Notes:
+- Wrap-around is enabled by default: next on last goes to first, previous on first goes to last.
+- Buttons use chevrons by default for list steppers.
+- Keyboard: Up/Down arrows move forward/backward; Enter confirms input.
+
+### Additional API
+
+- `getSelectedItem()` → returns the currently selected item `{ id, label, ... }`.
+- `setSelectedItem(idOrIndex)` → select by `id` or zero-based index.
+- `updateItems(newItems)` → replace the items array and keep selection when possible.
+
 ![Basic Number Stepper](docs/images/Screenshot_2.png)
 
 ### Custom Layout
@@ -119,6 +165,7 @@ const stepper = new HpvNumberStepper({
 ```
 
 ![Percentage Stepper Example](docs/images/Screenshot_3.png)
+![Multi Stepper Example](docs/images/Screenshot_3_multi.png)
 
 ### Currency Stepper
 

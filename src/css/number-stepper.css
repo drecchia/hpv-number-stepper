@@ -40,3 +40,12 @@
         outline: none;
     }
 }
+
+/* List stepper specific styles */
+.stepper-container.list-stepper {
+    & .stepper-button {
+        font-family: monospace;
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+}

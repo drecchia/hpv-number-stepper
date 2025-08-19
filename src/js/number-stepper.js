@@ -157,3 +157,114 @@ class HpvNumberStepper {
         this._updateValue(this.value + delta);
     }
 }
+
+class HpvListStepper extends HpvNumberStepper {
+    constructor({
+        items = [], // [{ id, label }, ...]
+        initialValue = 0, // index or id
+        onChange: userOnChange,
+        onCreate: userOnCreate,
+        onRender: userOnRender = (item, index) => item?.label || '',
+        ...otherOptions
+    }) {
+        // Find initial index before calling super
+        const findIndex = (value, itemsArray) => {
+            if (typeof value === 'number' && value >= 0 && value < itemsArray.length) {
+                return value; // Treat as index
+            }
+            
+            // Try to find by id
+            const index = itemsArray.findIndex(item => item.id === value);
+            return index >= 0 ? index : 0;
+        };
+        
+        const initialIndex = findIndex(initialValue, items);
+        
+        // Call parent constructor with modified options
+        super({
+            ...otherOptions,
+            initialValue: initialIndex,
+            min: 0,
+            max: Math.max(0, items.length - 1),
+            stepSize: 1,
+            onChange: (index, instance) => {
+                const list = (instance && instance.items) ? instance.items : items;
+                const item = list[index];
+                if (typeof userOnChange === 'function') userOnChange(item, index, instance);
+            },
+            onCreate: (index, instance) => {
+                const list = (instance && instance.items) ? instance.items : items;
+                const item = list[index];
+                if (typeof userOnCreate === 'function') userOnCreate(item, index, instance);
+            },
+            onRender: (index, instance) => {
+                const list = (instance && instance.items) ? instance.items : items;
+                const item = list[index];
+                return userOnRender(item, index, instance);
+            }
+        });
+        
+    // Store list-specific properties AFTER super() call
+    this.items = items;
+    this.isListMode = true;
+        
+    // Update button text to chevrons
+    this.btnMinus.textContent = '‹';
+    this.btnPlus.textContent = '›';
+        
+    // Add class for styling
+    this.container.classList.add('list-stepper');
+    }
+    
+    _findIndex(value) {
+        if (typeof value === 'number' && value >= 0 && value < this.items.length) {
+            return value; // Treat as index
+        }
+        
+        // Try to find by id
+        const index = this.items.findIndex(item => item.id === value);
+        return index >= 0 ? index : 0;
+    }
+    
+    _parseInput(inputText) {
+        // Try to find item by label (case-insensitive partial match)
+        const searchText = inputText.toLowerCase().trim();
+        const index = this.items.findIndex(item => 
+            item.label.toLowerCase().includes(searchText)
+        );
+        return index >= 0 ? index : this.value; // Keep current if not found
+    }
+    
+    // Override sanitize to wrap around instead of clamping
+    _sanitize(val) {
+        const count = Array.isArray(this.items) ? this.items.length : 0;
+        if (count <= 0) return 0;
+        const idx = Math.round(val);
+        // Proper modulo wrap for negative/overflow indices
+        return ((idx % count) + count) % count;
+    }
+
+    // New methods specific to list functionality
+    getSelectedItem() {
+        return this.items[this.value];
+    }
+    
+    setSelectedItem(idOrIndex) {
+        const index = this._findIndex(idOrIndex);
+        this.setValue(index);
+    }
+    
+    updateItems(newItems) {
+        const currentItem = this.getSelectedItem();
+        this.items = newItems;
+        this.max = Math.max(0, newItems.length - 1);
+        
+        // Try to maintain selection if possible
+        if (currentItem) {
+            const newIndex = this._findIndex(currentItem.id);
+            this.setValue(newIndex);
+        } else {
+            this.setValue(0);
+        }
+    }
+}

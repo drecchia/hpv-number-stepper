@@ -7,6 +7,30 @@
     <title>Number Stepper</title>
     <link rel="stylesheet" href="./src/css/number-stepper.css" />
     <style>
+        /* Demo page styles */
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2em;
+            line-height: 1.6;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        h2 {
+            margin-top: 2em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5em;
+        }
+
+        .stepper-container {
+            margin-bottom: 1.5em;
+            max-width: 300px;
+        }
+
         .label {
             margin-bottom: 0.25em;
             font-size: 0.9em;
@@ -16,13 +40,39 @@
 </head>
 
 <body>
-
+    <h1>HPV Number Stepper Demo</h1>
+    
+    <h2>Original Number Stepper</h2>
+    
     <div class="label">Sales tax</div>
     <div id="stepper-container-root"></div>
+    
+    <div class="label">Temperature (°C)</div>
+    <div id="temperature-stepper"></div>
+    
+    <h2>New List Stepper</h2>
+    
+    <div class="label">Select Country</div>
+    <div id="country-stepper"></div>
+    
+    <div class="label">Choose Product</div>
+    <div id="product-stepper"></div>
+    
+    <div class="label">Select Color</div>
+    <div id="color-stepper"></div>
+
+    <h2>Live Values</h2>
+    <div id="output" style="background: #f0f0f0; padding: 1em; margin: 1em 0; border-radius: 5px;">
+        <div>Sales tax: <span id="sales-value">-</span></div>
+        <div>Temperature: <span id="temp-value">-</span></div>
+        <div>Country: <span id="country-value">-</span></div>
+        <div>Product: <span id="product-value">-</span></div>
+        <div>Color: <span id="color-value">-</span></div>
+    </div>
 
     <script src="./src/js/number-stepper.js"></script>
     <script>
-        // Example usage
+        // Example usage - Original Number Stepper
         const root = document.getElementById('stepper-container-root');
         const stepper = new HpvNumberStepper({
             initialValue: 5,
@@ -30,12 +80,110 @@
             max: 50,
             stepSize: 0.5,
             onCreate: (val, instance) => console.log('Stepper created with:', val, instance),
-            onChange: (val, instance) => console.log('Value changed:', val, instance),
+            onChange: (val, instance) => {
+                console.log('Value changed:', val, instance);
+                document.getElementById('sales-value').textContent = `${val.toFixed(1)}%`;
+            },
             onRender: (val, instance) => `${val.toFixed(1)} %`,
             layout: [ 'minus', 'input', 'plus' ] // Change element order
         });
-
         stepper.mountTo(root);
+        
+        // Temperature stepper
+        const tempStepper = new HpvNumberStepper({
+            initialValue: 20,
+            min: -50,
+            max: 100,
+            stepSize: 1,
+            onChange: (val) => {
+                document.getElementById('temp-value').textContent = `${val}°C`;
+            },
+            onRender: (val) => `${val}°C`,
+            layout: ['input', 'minus', 'plus'] // Input first
+        });
+        tempStepper.mountTo(document.getElementById('temperature-stepper'));
+        
+        // Country list stepper
+        const countries = [
+            { id: 'us', label: 'United States' },
+            { id: 'ca', label: 'Canada' },
+            { id: 'mx', label: 'Mexico' },
+            { id: 'br', label: 'Brazil' },
+            { id: 'ar', label: 'Argentina' },
+            { id: 'fr', label: 'France' },
+            { id: 'de', label: 'Germany' },
+            { id: 'jp', label: 'Japan' },
+            { id: 'au', label: 'Australia' }
+        ];
+        
+        const countryStepper = new HpvListStepper({
+            items: countries,
+            initialValue: 'us',
+            onChange: (item, index) => {
+                console.log('Country selected:', item, index);
+                document.getElementById('country-value').textContent = `${item.label} (${item.id})`;
+            },
+            layout: ['minus', 'input', 'plus']
+        });
+        countryStepper.mountTo(document.getElementById('country-stepper'));
+        
+        // Product stepper with custom rendering
+        const products = [
+            { id: 'laptop', label: 'Gaming Laptop', price: 1299.99 },
+            { id: 'phone', label: 'Smartphone', price: 699.99 },
+            { id: 'tablet', label: 'Tablet Pro', price: 899.99 },
+            { id: 'watch', label: 'Smart Watch', price: 399.99 },
+            { id: 'headphones', label: 'Wireless Headphones', price: 249.99 }
+        ];
+        
+        const productStepper = new HpvListStepper({
+            items: products,
+            initialValue: 0, // idx mode
+            onRender: (item, index) => `${item.label} - $${item.price}`,
+            onChange: (item, index) => {
+                console.log('Product selected:', item, index);
+                document.getElementById('product-value').textContent = `${item.label} ($${item.price})`;
+            },
+            layout: ['minus', 'input', 'plus']
+        });
+
+        productStepper.mountTo(document.getElementById('product-stepper'));
+        
+        // Color stepper with input-first layout
+        const colors = [
+            { id: 'red', label: 'Red' },
+            { id: 'blue', label: 'Blue' },
+            { id: 'green', label: 'Green' },
+            { id: 'yellow', label: 'Yellow' },
+            { id: 'purple', label: 'Purple' },
+            { id: 'orange', label: 'Orange' }
+        ];
+        
+        const colorStepper = new HpvListStepper({
+            items: colors,
+            initialValue: 2, // Start with green
+            onChange: (item, index) => {
+                console.log('Color selected:', item, index);
+                document.getElementById('color-value').textContent = item.label;
+                document.getElementById('color-value').style.color = item.id;
+            },
+            layout: ['input', 'minus', 'plus'] // Input first layout
+        });
+        colorStepper.mountTo(document.getElementById('color-stepper'));
+
+        // Demo API methods
+        console.log('=== API Demo ===');
+        console.log('Country stepper selected item:', countryStepper.getSelectedItem());
+        console.log('Product stepper value (rendered):', productStepper.getValue(true));
+        console.log('Color stepper value (raw index):', colorStepper.getValue());
+        
+        // Test setting values programmatically after 3 seconds
+        setTimeout(() => {
+            console.log('=== Programmatic Updates ===');
+            countryStepper.setSelectedItem('jp'); // By ID
+            productStepper.setSelectedItem(2); // By index
+            stepper.setValue(12.5); // Number stepper
+        }, 3000);
     </script>
 
 </body>
