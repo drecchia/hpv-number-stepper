@@ -1,11 +1,14 @@
 .stepper-container {
     display: flex;
-    align-items: center;
+    /* Allow children to stretch to the container height so buttons match tall containers */
+    align-items: stretch;
     border: 1px solid #ccc;
     border-radius: 5px;
     overflow: hidden;
     /* width: fit-content; */
     font-family: sans-serif;
+    /* Ensure minimum height and proper flex behavior */
+    min-height: 1.5em;
 
     & .stepper-button {
         background: none;
@@ -14,6 +17,15 @@
         font-size: 1.25em;
         cursor: pointer;
         color: #555;
+        /* Make buttons stretch to match container height */
+        min-height: 1.5em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: stretch;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        /* Remove height: 100% as it doesn't work with content-sized containers */
     }
 
     & .stepper-button-left {
@@ -29,6 +41,13 @@
         text-align: center;
         width: 100%;
         font-size: 1em;
+        min-height: 1.5em;
+        box-sizing: border-box;
+        display: block;
+        padding: 0.5em 0.75em;
+        flex-grow: 1;
+        resize: none;
+        align-self: stretch;
     }
 
     & .stepper-input-left {
@@ -38,6 +57,38 @@
 
     & .stepper-input:focus {
         outline: none;
+    }
+
+    & .stepper-display {
+        display: flex;
+        padding: 0.5em 0.75em;
+        width: 100%;
+        text-align: center;
+        font-size: 1em;
+        line-height: 1.2;
+        min-height: 1.5em;
+        box-sizing: border-box;
+        align-items: center;
+        justify-content: center;
+        flex-grow: 1;
+        align-self: stretch;
+        overflow-wrap: break-word;
+    }
+
+    & .stepper-display-left {
+        text-align: left;
+    }
+
+    & .stepper-input-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
 }
 

@@ -1,6 +1,6 @@
 {
     "name": "hpv-number-stepper",
-    "version": "2.0.1",
+    "version": "2.1.1",
     "author": "Danilo T Recchia",
     "main": "dist/js/all.min.js",
     "files": [

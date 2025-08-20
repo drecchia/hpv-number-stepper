@@ -50,6 +50,9 @@
     <div class="label">Temperature (°C)</div>
     <div id="temperature-stepper"></div>
     
+    <div class="label">Number Stepper (HTML rendering)</div>
+    <div id="number-html-stepper"></div>
+    
     <h2>New List Stepper</h2>
     
     <div class="label">Select Country</div>
@@ -61,6 +64,17 @@
     <div class="label">Select Color</div>
     <div id="color-stepper"></div>
 
+    <h2>HTML Rendering Examples</h2>
+    
+    <div class="label">Rich Country Selector (HTML)</div>
+    <div id="country-html-stepper"></div>
+    
+    <div class="label">Product with Images (HTML)</div>
+    <div id="product-html-stepper"></div>
+
+    <div class="label">Tall Content Test (HTML)</div>
+    <div id="tall-content-stepper"></div>
+
     <h2>Live Values</h2>
     <div id="output" style="background: #f0f0f0; padding: 1em; margin: 1em 0; border-radius: 5px;">
         <div>Sales tax: <span id="sales-value">-</span></div>
@@ -68,6 +82,10 @@
         <div>Country: <span id="country-value">-</span></div>
         <div>Product: <span id="product-value">-</span></div>
         <div>Color: <span id="color-value">-</span></div>
+        <div>Rich Country: <span id="country-html-value">-</span></div>
+        <div>HTML Product: <span id="product-html-value">-</span></div>
+        <div>Number (HTML): <span id="number-html-value">-</span></div>
+        <div>Tall Content: <span id="tall-content-value">-</span></div>
     </div>
 
     <script src="./src/js/number-stepper.js"></script>
@@ -103,8 +121,30 @@
         });
         tempStepper.mountTo(document.getElementById('temperature-stepper'));
         
+        // Number stepper with HTML rendering
+        const numberHtmlStepper = new HpvNumberStepper({
+            initialValue: 42.5,
+            min: 0,
+            max: 100,
+            stepSize: 0.5,
+            renderAsHtml: true,
+            onRender: (val) => `
+                <div style="display:flex;align-items:baseline;gap:6px;justify-content: center;">
+                    <strong style="font-size:1.1em;">${val.toFixed(1)}</strong>
+                    <small style="color:#666">%</small>
+                </div>
+            `,
+            onChange: (val) => {
+                // update live area as HTML-safe text
+                document.getElementById('number-html-value').textContent = `${val.toFixed(1)}%`;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        numberHtmlStepper.mountTo(document.getElementById('number-html-stepper'));
+        
         // Country list stepper
         const countries = [
+            { id: null, label: 'China' },
             { id: 'us', label: 'United States' },
             { id: 'ca', label: 'Canada' },
             { id: 'mx', label: 'Mexico' },
@@ -118,7 +158,7 @@
         
         const countryStepper = new HpvListStepper({
             items: countries,
-            initialValue: 'us',
+            initialItem: 'br',
             onChange: (item, index) => {
                 console.log('Country selected:', item, index);
                 document.getElementById('country-value').textContent = `${item.label} (${item.id})`;
@@ -138,7 +178,7 @@
         
         const productStepper = new HpvListStepper({
             items: products,
-            initialValue: 0, // idx mode
+            initialItem: products[1],
             onRender: (item, index) => `${item.label} - $${item.price}`,
             onChange: (item, index) => {
                 console.log('Product selected:', item, index);
@@ -161,7 +201,7 @@
         
         const colorStepper = new HpvListStepper({
             items: colors,
-            initialValue: 2, // Start with green
+            initialItem: colors[2], // Start with green
             onChange: (item, index) => {
                 console.log('Color selected:', item, index);
                 document.getElementById('color-value').textContent = item.label;
@@ -170,6 +210,109 @@
             layout: ['input', 'minus', 'plus'] // Input first layout
         });
         colorStepper.mountTo(document.getElementById('color-stepper'));
+
+        // HTML rendering examples
+        const countriesWithFlags = [
+            { id: 'us', label: 'United States', flag: '🇺🇸' },
+            { id: 'ca', label: 'Canada', flag: '🇨🇦' },
+            { id: 'mx', label: 'Mexico', flag: '🇲🇽' },
+            { id: 'br', label: 'Brazil', flag: '🇧🇷' },
+            { id: 'ar', label: 'Argentina', flag: '🇦🇷' },
+            { id: 'fr', label: 'France', flag: '🇫🇷' },
+            { id: 'de', label: 'Germany', flag: '🇩🇪' },
+            { id: 'jp', label: 'Japan', flag: '🇯🇵' },
+            { id: 'au', label: 'Australia', flag: '🇦🇺' }
+        ];
+        
+        const countryHtmlStepper = new HpvListStepper({
+            items: countriesWithFlags,
+            initialItem: 'ca',
+            renderAsHtml: true,
+            onRender: (item) => `<span style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.2em;">${item.flag}</span><strong>${item.label}</strong></span>`,
+            onChange: (item, index) => {
+                console.log('HTML Country selected:', item, index);
+                document.getElementById('country-html-value').textContent = `${item.label} ${item.flag}`;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        countryHtmlStepper.mountTo(document.getElementById('country-html-stepper'));
+        
+        const productsWithImages = [
+            { id: 'laptop', label: 'Gaming Laptop', price: 1299.99, color: '#4285f4' },
+            { id: 'phone', label: 'Smartphone', price: 699.99, color: '#34a853' },
+            { id: 'tablet', label: 'Tablet Pro', price: 899.99, color: '#fbbc04' },
+            { id: 'watch', label: 'Smart Watch', price: 399.99, color: '#ea4335' },
+            { id: 'headphones', label: 'Wireless Headphones', price: 249.99, color: '#9c27b0' }
+        ];
+        
+        const productHtmlStepper = new HpvListStepper({
+            items: productsWithImages,
+            initialItem: productsWithImages[0],
+            renderAsHtml: true,
+            onRender: (item) => `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${item.color};"></div>
+                    <div>
+                        <div style="font-weight: bold; font-size: 0.9em;">${item.label}</div>
+                        <div style="font-size: 0.8em; color: #666;">$${item.price}</div>
+                    </div>
+                </div>
+            `,
+            onChange: (item, index) => {
+                console.log('HTML Product selected:', item, index);
+                document.getElementById('product-html-value').innerHTML = `<span style="color: ${item.color};">${item.label}</span> ($${item.price})`;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        productHtmlStepper.mountTo(document.getElementById('product-html-stepper'));
+
+        // Tall content test
+        const tallItems = [
+            { 
+                id: 'item1', 
+                label: 'Multi-line Item', 
+                description: 'This is a very long description that will create tall content to test button height stretching behavior.'
+            },
+            { 
+                id: 'item2', 
+                label: 'Another Tall Item', 
+                description: 'Another item with multiple lines of text to demonstrate how buttons handle tall container content properly.'
+            },
+            { 
+                id: 'item3', 
+                label: 'Third Test Item', 
+                description: 'The third item in our test suite for verifying proper button height behavior with variable content heights.'
+            }
+        ];
+        
+        const tallContentStepper = new HpvListStepper({
+            items: tallItems,
+            initialItem: tallItems[0],
+            renderAsHtml: true,
+            onRender: (item) => `
+                <div style="padding: 8px 0;">
+                    <div style="font-weight: bold; margin-bottom: 4px;">${item.label}</div>
+                    <div style="font-size: 0.85em; color: #666; line-height: 1.3;">${item.description}</div>
+                </div>
+            `,
+            onChange: (item, index) => {
+                document.getElementById('tall-content-value').textContent = item.label;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        tallContentStepper.mountTo(document.getElementById('tall-content-stepper'));
+
+        // Initialize display values
+        document.getElementById('sales-value').textContent = '5.0%';
+        document.getElementById('temp-value').textContent = '20°C';
+        document.getElementById('country-value').textContent = 'Brazil (br)';
+        document.getElementById('product-value').textContent = 'Smartphone ($699.99)';
+        document.getElementById('color-value').textContent = 'Green';
+        document.getElementById('color-value').style.color = 'green';
+        document.getElementById('country-html-value').textContent = 'Canada 🇨🇦';
+        document.getElementById('product-html-value').innerHTML = '<span style="color: #4285f4;">Gaming Laptop</span> ($1299.99)';
+        document.getElementById('number-html-value').textContent = '42.5%';
+        document.getElementById('tall-content-value').textContent = 'Multi-line Item';
 
         // Demo API methods
         console.log('=== API Demo ===');
@@ -180,9 +323,11 @@
         // Test setting values programmatically after 3 seconds
         setTimeout(() => {
             console.log('=== Programmatic Updates ===');
-            countryStepper.setSelectedItem('jp'); // By ID
-            productStepper.setSelectedItem(2); // By index
+            countryStepper.setSelectedItem({ id: 'jp', label: 'Japan' }); // Full item object
+            productStepper.setSelectedItem(products[2]); // Full item object
             stepper.setValue(12.5); // Number stepper
+            countryHtmlStepper.setSelectedItem({ id: 'de', label: 'Germany', flag: '🇩🇪' });
+            productHtmlStepper.setSelectedItem(productsWithImages[3]);
         }, 3000);
     </script>
 
