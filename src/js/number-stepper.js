@@ -1,4 +1,4 @@
-class HpvNumberStepper {
+class HpvStepperBase {
     constructor({
         initialValue = 0,
         min = 0,
@@ -6,19 +6,32 @@ class HpvNumberStepper {
         stepSize = 1,
         onCreate,
         onChange,
-        onRender = (val) => `${val}%`,
+        renderValue = (val) => `${val}%`,
         layout = ['minus', 'input', 'plus'],
-        renderAsHtml = false
+        renderAsHtml = false,
+        items // For list stepper
     }) {
         this.min = min;
         this.max = max;
         this.stepSize = stepSize;
         this.onChange = onChange;
-        this.onRender = onRender;
+        this.renderValue = renderValue;
         this.renderAsHtml = !!renderAsHtml;
+        this.items = items; // For list stepper
         this.value = this._sanitize(initialValue);
 
-        // Create elements
+        this._createElements();
+        this._setupEventListeners();
+        this._buildLayout(layout);
+        this._updateValue(this.value);
+
+        if (typeof onCreate === 'function') {
+            onCreate(this.value, this);
+        }
+    }
+
+    // Shared DOM creation
+    _createElements() {
         this.container = document.createElement('div');
         this.container.className = 'stepper-container';
 
@@ -30,30 +43,20 @@ class HpvNumberStepper {
         this.input.type = 'text';
         this.input.className = 'stepper-input';
 
-        if (layout[0] === 'input') {
-            this.input.classList.add('stepper-input-left');
-        }
-
         this.btnPlus = document.createElement('button');
         this.btnPlus.textContent = '+';
         this.btnPlus.className = 'stepper-button';
 
-        // Optional display element for HTML rendering
         if (this.renderAsHtml) {
             this.display = document.createElement('span');
             this.display.className = 'stepper-display';
-            this.container.tabIndex = 0; // enable keyboard when using display
+            this.container.tabIndex = 0;
             this.input.classList.add('stepper-input-hidden');
         }
+    }
 
-        // Set initial content
-        if (this.renderAsHtml) {
-            this.display.innerHTML = this.onRender(this.value, this);
-        } else {
-            this.input.value = this.onRender(this.value, this);
-        }
-
-        // Handlers
+    // Shared event setup
+    _setupEventListeners() {
         this._minusHandler = () => this._changeValue(-this.stepSize);
         this._plusHandler = () => this._changeValue(this.stepSize);
         this._inputHandler = () => {
@@ -72,6 +75,12 @@ class HpvNumberStepper {
                 this.input.blur();
             }
         };
+
+        this.btnMinus.addEventListener('click', this._minusHandler);
+        this.btnPlus.addEventListener('click', this._plusHandler);
+        this.input.addEventListener('change', this._inputHandler);
+        this.input.addEventListener('keydown', this._keydownHandler);
+
         if (this.renderAsHtml) {
             this._containerKeydownHandler = (e) => {
                 if (e.key === 'ArrowUp') {
@@ -82,22 +91,14 @@ class HpvNumberStepper {
                     this._changeValue(-this.stepSize);
                 }
             };
-            this._displayClickHandler = () => {
-                this.container.focus();
-            };
-        }
-
-        // Event listeners
-        this.btnMinus.addEventListener('click', this._minusHandler);
-        this.btnPlus.addEventListener('click', this._plusHandler);
-        this.input.addEventListener('change', this._inputHandler);
-        this.input.addEventListener('keydown', this._keydownHandler);
-        if (this.renderAsHtml) {
+            this._displayClickHandler = () => this.container.focus();
             this.container.addEventListener('keydown', this._containerKeydownHandler);
             this.display.addEventListener('click', this._displayClickHandler);
         }
+    }
 
-        // Build layout
+    // Shared layout building
+    _buildLayout(layout) {
         const elementMap = {
             minus: this.btnMinus,
             input: this.input,
@@ -133,12 +134,9 @@ class HpvNumberStepper {
                 }
             }
         });
-
-        if (typeof onCreate === 'function') {
-            onCreate(this.value, this);
-        }
     }
 
+    // Shared methods
     mountTo(element) {
         element.appendChild(this.container);
     }
@@ -149,11 +147,11 @@ class HpvNumberStepper {
     }
 
     getValue(rendered = false) {
-        return rendered ? this.onRender(this.value, this) : this.value;
+        return rendered ? this.renderValue(this.value, this) : this.value;
     }
 
     destroy() {
-        // Remove event listeners
+        // Remove listeners and clean up (shared logic)
         this.btnMinus.removeEventListener('click', this._minusHandler);
         this.btnPlus.removeEventListener('click', this._plusHandler);
         this.input.removeEventListener('change', this._inputHandler);
@@ -163,37 +161,26 @@ class HpvNumberStepper {
             this.display.removeEventListener('click', this._displayClickHandler);
         }
 
-        // Remove from DOM if mounted
         if (this.container.parentNode) {
             this.container.parentNode.removeChild(this.container);
         }
 
-        // Clear references
         this.container = null;
         this.btnMinus = null;
         this.btnPlus = null;
         this.input = null;
         this.display = null;
         this.onChange = null;
-        this.onRender = null;
-    }
-
-    _parseInput(inputText) {
-        const numeric = parseFloat(inputText.replace(/[^\d.-]/g, ''));
-        return isNaN(numeric) ? this.min : numeric;
-    }
-
-    _sanitize(val) {
-        return Math.max(this.min, Math.min(this.max, val));
+        this.renderValue = null;
     }
 
     _updateValue(newVal) {
         const sanitized = this._sanitize(newVal);
         this.value = sanitized;
         if (this.renderAsHtml) {
-            this.display.innerHTML = this.onRender(sanitized, this);
+            this.display.innerHTML = this.renderValue(sanitized, this);
         } else {
-            this.input.value = this.onRender(sanitized, this);
+            this.input.value = this.renderValue(sanitized, this);
         }
 
         if (typeof this.onChange === 'function') {
@@ -204,111 +191,108 @@ class HpvNumberStepper {
     _changeValue(delta) {
         this._updateValue(this.value + delta);
     }
+
+    // Abstract methods to be implemented by subclasses
+    _parseInput(inputText) {
+        throw new Error('Abstract method _parseInput must be implemented');
+    }
+
+    _sanitize(val) {
+        throw new Error('Abstract method _sanitize must be implemented');
+    }
 }
 
-class HpvListStepper extends HpvNumberStepper {
+class HpvNumberStepper extends HpvStepperBase {
+    constructor(options) {
+        super(options);
+    }
+
+    _parseInput(inputText) {
+        const numeric = parseFloat(inputText.replace(/[^\d.-]/g, ''));
+        return isNaN(numeric) ? this.min : numeric;
+    }
+
+    _sanitize(val) {
+        return Math.max(this.min, Math.min(this.max, val));
+    }
+}
+
+class HpvListStepper extends HpvStepperBase {
     constructor({
-        items = [], // [{ id, label } | custom shape, ...]
-        initialItem, // full item or key value (string/number)
+        items = [],
+        initialItem,
         keyField = 'id',
         valueField = 'label',
         onChange: userOnChange,
         onCreate: userOnCreate,
-        onRender: userOnRender = (item, index, instance) => item?.[(instance && instance.valueField) ? instance.valueField : valueField] || '',
+        renderValue: userOnRender = (item, index, instance) => item?.[(instance && instance.valueField) ? instance.valueField : valueField] || '',
         ...otherOptions
     }) {
-        // Find initial index before calling super
-        const findIndex = (seed, itemsArray, kf) => {
-            if (seed && typeof seed === 'object') {
-                const keyVal = seed[kf];
-                const idx = itemsArray.findIndex(it => it && it[kf] === keyVal);
-                return idx >= 0 ? idx : 0;
-            }
-            const idx = itemsArray.findIndex(it => it && it[kf] === seed);
-            return idx >= 0 ? idx : 0;
-        };
-        
-        const initialSeed = (typeof initialItem !== 'undefined') ? initialItem : (items[0] || null);
-        const initialIndex = initialSeed == null ? 0 : findIndex(initialSeed, items, keyField);
-        
-        // Call parent constructor with modified options
+        const initialIndex = HpvListStepper._findInitialIndex(initialItem, items, keyField);
+
         super({
             ...otherOptions,
             initialValue: initialIndex,
             min: 0,
             max: Math.max(0, items.length - 1),
             stepSize: 1,
+            items: items,
             onChange: (index, instance) => {
-                const list = (instance && instance.items) ? instance.items : items;
-                const item = list[index];
+                const item = instance.items[index];
                 if (typeof userOnChange === 'function') userOnChange(item, index, instance);
             },
             onCreate: (index, instance) => {
-                const list = (instance && instance.items) ? instance.items : items;
-                const item = list[index];
+                const item = instance.items[index];
                 if (typeof userOnCreate === 'function') userOnCreate(item, index, instance);
             },
-            onRender: (index, instance) => {
-                const list = (instance && instance.items) ? instance.items : items;
-                const item = list[index];
+            renderValue: (index, instance) => {
+                const item = instance.items[index];
                 return userOnRender(item, index, instance);
             }
         });
-        
-    // Store list-specific properties AFTER super() call
-    this.items = items;
-    this.keyField = keyField;
-    this.valueField = valueField;
-    this.isListMode = true;
-        
-    // Update button text to chevrons
-    this.btnMinus.textContent = '‹';
-    this.btnPlus.textContent = '›';
-        
-    // Add class for styling
-    this.container.classList.add('list-stepper');
-    }
-    
-    _findIndex(value) {
-        // If full item provided
-        if (value && typeof value === 'object') {
-            const keyVal = value[this.keyField];
-            const idx = this.items.findIndex(item => item && item[this.keyField] === keyVal);
-            return idx >= 0 ? idx : 0;
-        }
-    // Otherwise treat as key value
-    const index = this.items.findIndex(item => item && item[this.keyField] === value);
-    return index >= 0 ? index : 0;
-    }
-    
-    _parseInput(inputText) {
-        // Try to find item by label (case-insensitive partial match)
-        const searchText = inputText.toLowerCase().trim();
-        const vf = this.valueField || 'label';
-        const index = this.items.findIndex(item => {
-            const text = (item && item[vf] != null) ? String(item[vf]).toLowerCase() : '';
-            return text.includes(searchText);
-        });
-        return index >= 0 ? index : this.value; // Keep current if not found
-    }
-    
-    // Override sanitize to wrap around instead of clamping
-    _sanitize(val) {
-        const count = Array.isArray(this.items) ? this.items.length : 0;
-        const idx = Math.round(val);
-        if (count > 0) {
-            // Proper modulo wrap for negative/overflow indices
-            return ((idx % count) + count) % count;
-        }
-        // During construction (before this.items is set), fall back to clamp
-        return Math.max(this.min, Math.min(this.max, idx));
+
+        this.items = items;
+        this.keyField = keyField;
+        this.valueField = valueField;
+
+        // Customize for list mode
+        this.btnMinus.textContent = '‹';
+        this.btnPlus.textContent = '›';
+        this.container.classList.add('list-stepper');
     }
 
-    // New methods specific to list functionality
+    static _findInitialIndex(initialItem, items, keyField) {
+        if (!initialItem) return 0;
+        if (typeof initialItem === 'object') {
+            const idx = items.findIndex(it => it && it[keyField] === initialItem[keyField]);
+            return idx >= 0 ? idx : 0;
+        }
+        const idx = items.findIndex(it => it && it[keyField] === initialItem);
+        return idx >= 0 ? idx : 0;
+    }
+
+    _parseInput(inputText) {
+        const searchText = inputText.toLowerCase().trim();
+        const index = this.items.findIndex(item => {
+            const text = String(item?.[this.valueField] || '').toLowerCase();
+            return text.includes(searchText);
+        });
+        return index >= 0 ? index : this.value;
+    }
+
+    _sanitize(val) {
+        const count = this.items.length;
+        if (count > 0) {
+            return ((Math.round(val) % count) + count) % count;
+        }
+        return Math.max(this.min, Math.min(this.max, Math.round(val)));
+    }
+
+    // List-specific methods
     getSelectedItem() {
         return this.items[this.value];
     }
-    
+
     setSelectedItem(item) {
         if (!item || typeof item !== 'object') {
             console.warn('HpvListStepper.setSelectedItem expects a full item object.');
@@ -317,18 +301,26 @@ class HpvListStepper extends HpvNumberStepper {
         const index = this._findIndex(item);
         this.setValue(index);
     }
-    
+
     updateItems(newItems) {
         const currentItem = this.getSelectedItem();
         this.items = newItems;
         this.max = Math.max(0, newItems.length - 1);
-        
-        // Try to maintain selection if possible
+
         if (currentItem) {
             const newIndex = this._findIndex(currentItem);
             this.setValue(newIndex);
         } else {
             this.setValue(0);
         }
+    }
+
+    _findIndex(value) {
+        if (value && typeof value === 'object') {
+            const idx = this.items.findIndex(item => item && item[this.keyField] === value[this.keyField]);
+            return idx >= 0 ? idx : 0;
+        }
+        const idx = this.items.findIndex(item => item && item[this.keyField] === value);
+        return idx >= 0 ? idx : 0;
     }
 }

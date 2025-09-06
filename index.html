@@ -102,7 +102,7 @@
                 console.log('Value changed:', val, instance);
                 document.getElementById('sales-value').textContent = `${val.toFixed(1)}%`;
             },
-            onRender: (val, instance) => `${val.toFixed(1)} %`,
+            renderValue: (val, instance) => `${val.toFixed(1)} %`,
             layout: [ 'minus', 'input', 'plus' ] // Change element order
         });
         stepper.mountTo(root);
@@ -116,7 +116,7 @@
             onChange: (val) => {
                 document.getElementById('temp-value').textContent = `${val}°C`;
             },
-            onRender: (val) => `${val}°C`,
+            renderValue: (val) => `${val}°C`,
             layout: ['input', 'minus', 'plus'] // Input first
         });
         tempStepper.mountTo(document.getElementById('temperature-stepper'));
@@ -128,7 +128,7 @@
             max: 100,
             stepSize: 0.5,
             renderAsHtml: true,
-            onRender: (val) => `
+            renderValue: (val) => `
                 <div style="display:flex;align-items:baseline;gap:6px;justify-content: center;">
                     <strong style="font-size:1.1em;">${val.toFixed(1)}</strong>
                     <small style="color:#666">%</small>
@@ -179,7 +179,7 @@
         const productStepper = new HpvListStepper({
             items: products,
             initialItem: products[1],
-            onRender: (item, index) => `${item.label} - $${item.price}`,
+            renderValue: (item, index) => `${item.label} - $${item.price}`,
             onChange: (item, index) => {
                 console.log('Product selected:', item, index);
                 document.getElementById('product-value').textContent = `${item.label} ($${item.price})`;
@@ -228,7 +228,7 @@
             items: countriesWithFlags,
             initialItem: 'ca',
             renderAsHtml: true,
-            onRender: (item) => `<span style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.2em;">${item.flag}</span><strong>${item.label}</strong></span>`,
+            renderValue: (item) => `<span style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.2em;">${item.flag}</span><strong>${item.label}</strong></span>`,
             onChange: (item, index) => {
                 console.log('HTML Country selected:', item, index);
                 document.getElementById('country-html-value').textContent = `${item.label} ${item.flag}`;
@@ -249,7 +249,7 @@
             items: productsWithImages,
             initialItem: productsWithImages[0],
             renderAsHtml: true,
-            onRender: (item) => `
+            renderValue: (item) => `
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${item.color};"></div>
                     <div>
@@ -268,19 +268,19 @@
 
         // Tall content test
         const tallItems = [
-            { 
-                id: 'item1', 
-                label: 'Multi-line Item', 
+            {
+                id: 'item1',
+                label: 'Multi-line Item',
                 description: 'This is a very long description that will create tall content to test button height stretching behavior.'
             },
-            { 
-                id: 'item2', 
-                label: 'Another Tall Item', 
+            {
+                id: 'item2',
+                label: 'Another Tall Item',
                 description: 'Another item with multiple lines of text to demonstrate how buttons handle tall container content properly.'
             },
-            { 
-                id: 'item3', 
-                label: 'Third Test Item', 
+            {
+                id: 'item3',
+                label: 'Third Test Item',
                 description: 'The third item in our test suite for verifying proper button height behavior with variable content heights.'
             }
         ];
@@ -289,7 +289,7 @@
             items: tallItems,
             initialItem: tallItems[0],
             renderAsHtml: true,
-            onRender: (item) => `
+            renderValue: (item) => `
                 <div style="padding: 8px 0;">
                     <div style="font-weight: bold; margin-bottom: 4px;">${item.label}</div>
                     <div style="font-size: 0.85em; color: #666; line-height: 1.3;">${item.description}</div>
