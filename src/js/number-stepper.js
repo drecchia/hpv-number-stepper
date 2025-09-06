@@ -8,8 +8,7 @@ class HpvStepperBase {
         onChange,
         renderValue = (val) => `${val}%`,
         layout = ['minus', 'input', 'plus'],
-        renderAsHtml = false,
-        items // For list stepper
+        renderAsHtml = false
     }) {
         this.min = min;
         this.max = max;
@@ -17,7 +16,6 @@ class HpvStepperBase {
         this.onChange = onChange;
         this.renderValue = renderValue;
         this.renderAsHtml = !!renderAsHtml;
-        this.items = items; // For list stepper
         this.value = this._sanitize(initialValue);
 
         this._createElements();
@@ -225,10 +223,14 @@ class HpvListStepper extends HpvStepperBase {
         valueField = 'label',
         onChange: userOnChange,
         onCreate: userOnCreate,
-        renderValue: userOnRender = (item, index, instance) => item?.[(instance && instance.valueField) ? instance.valueField : valueField] || '',
+        renderValue: userOnRender = (item, index, instance) => item?.[instance.valueField || valueField] || '',
         ...otherOptions
     }) {
         const initialIndex = HpvListStepper._findInitialIndex(initialItem, items, keyField);
+
+        const tempRenderValue = (val) => val.toString();
+        const tempOnChange = () => {};
+        const tempOnCreate = () => {};
 
         super({
             ...otherOptions,
@@ -236,24 +238,40 @@ class HpvListStepper extends HpvStepperBase {
             min: 0,
             max: Math.max(0, items.length - 1),
             stepSize: 1,
-            items: items,
-            onChange: (index, instance) => {
-                const item = instance.items[index];
-                if (typeof userOnChange === 'function') userOnChange(item, index, instance);
-            },
-            onCreate: (index, instance) => {
-                const item = instance.items[index];
-                if (typeof userOnCreate === 'function') userOnCreate(item, index, instance);
-            },
-            renderValue: (index, instance) => {
-                const item = instance.items[index];
-                return userOnRender(item, index, instance);
-            }
+            onChange: tempOnChange,
+            onCreate: tempOnCreate,
+            renderValue: tempRenderValue
         });
 
         this.items = items;
         this.keyField = keyField;
         this.valueField = valueField;
+
+        const wrappedOnChange = (index, instance) => {
+            const item = instance.items[index];
+            if (typeof userOnChange === 'function') userOnChange(item, index, instance);
+        };
+
+        const wrappedRenderValue = (index, instance) => {
+            const item = instance.items[index];
+            return userOnRender(item, index, instance);
+        };
+
+        this.onChange = wrappedOnChange;
+        this.renderValue = wrappedRenderValue;
+
+        // Manually update display for initial render without calling onChange
+        if (this.renderAsHtml) {
+            this.display.innerHTML = this.renderValue(this.value, this);
+        } else {
+            this.input.value = this.renderValue(this.value, this);
+        }
+
+        // Manually call onCreate
+        if (typeof userOnCreate === 'function') {
+            const item = this.items[this.value];
+            userOnCreate(item, this.value, this);
+        }
 
         // Customize for list mode
         this.btnMinus.textContent = '‹';
@@ -281,6 +299,9 @@ class HpvListStepper extends HpvStepperBase {
     }
 
     _sanitize(val) {
+        if (this.items === undefined) {
+            return Math.max(this.min, Math.min(this.max, val));
+        }
         const count = this.items.length;
         if (count > 0) {
             return ((Math.round(val) % count) + count) % count;
