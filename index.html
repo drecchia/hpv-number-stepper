@@ -75,6 +75,15 @@
     <div class="label">Tall Content Test (HTML)</div>
     <div id="tall-content-stepper"></div>
 
+    <div class="label">Number Stepper (No Content Selection)</div>
+    <div id="no-select-stepper"></div>
+
+    <div class="label">Number Stepper Input Mode (No Selection Demo)</div>
+    <div id="no-select-input-stepper"></div>
+
+    <div class="label">List Stepper HTML Mode (No Selection Demo)</div>
+    <div id="no-select-list-html-stepper"></div>
+
     <h2>Live Values</h2>
     <div id="output" style="background: #f0f0f0; padding: 1em; margin: 1em 0; border-radius: 5px;">
         <div>Sales tax: <span id="sales-value">-</span></div>
@@ -86,6 +95,9 @@
         <div>HTML Product: <span id="product-html-value">-</span></div>
         <div>Number (HTML): <span id="number-html-value">-</span></div>
         <div>Tall Content: <span id="tall-content-value">-</span></div>
+        <div>No Selection: <span id="no-select-value">-</span></div>
+        <div>No Select Input: <span id="no-select-input-value">-</span></div>
+        <div>No Select List HTML: <span id="no-select-list-html-value">-</span></div>
     </div>
 
     <script src="./src/js/number-stepper.js"></script>
@@ -302,6 +314,51 @@
         });
         tallContentStepper.mountTo(document.getElementById('tall-content-stepper'));
 
+        // No selection stepper demo
+        const noSelectStepper = new HpvNumberStepper({
+            initialValue: 75,
+            min: 0,
+            max: 100,
+            stepSize: 5,
+            renderAsHtml: true,
+            allowContentSelection: false,
+            renderValue: (val) => `${val}%`,
+            onChange: (val) => {
+                document.getElementById('no-select-value').textContent = `${val}%`;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        noSelectStepper.mountTo(document.getElementById('no-select-stepper'));
+
+        // Number stepper input mode no selection demo (selection still allowed for editing)
+        const noSelectInputStepper = new HpvNumberStepper({
+            initialValue: 25,
+            min: 0,
+            max: 100,
+            stepSize: 1,
+            allowContentSelection: false,
+            onChange: (val) => {
+                document.getElementById('no-select-input-value').textContent = `${val}%`;
+            },
+            renderValue: (val) => `${val}%`,
+            layout: ['minus', 'input', 'plus']
+        });
+        noSelectInputStepper.mountTo(document.getElementById('no-select-input-stepper'));
+
+        // List stepper HTML mode no selection demo
+        const noSelectListHtmlStepper = new HpvListStepper({
+            items: countriesWithFlags,
+            initialItem: 'us',
+            renderAsHtml: true,
+            allowContentSelection: false,
+            renderValue: (item) => `<span style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 1.2em;">${item.flag}</span><strong>${item.label}</strong></span>`,
+            onChange: (item, index) => {
+                document.getElementById('no-select-list-html-value').textContent = `${item.label} ${item.flag}`;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        noSelectListHtmlStepper.mountTo(document.getElementById('no-select-list-html-stepper'));
+
         // Initialize display values
         document.getElementById('sales-value').textContent = '5.0%';
         document.getElementById('temp-value').textContent = '20°C';
@@ -313,6 +370,9 @@
         document.getElementById('product-html-value').innerHTML = '<span style="color: #4285f4;">Gaming Laptop</span> ($1299.99)';
         document.getElementById('number-html-value').textContent = '42.5%';
         document.getElementById('tall-content-value').textContent = 'Multi-line Item';
+        document.getElementById('no-select-value').textContent = '75%';
+        document.getElementById('no-select-input-value').textContent = '25%';
+        document.getElementById('no-select-list-html-value').textContent = 'United States 🇺🇸';
 
         // Demo API methods
         console.log('=== API Demo ===');

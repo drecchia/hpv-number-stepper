@@ -1,5 +1,18 @@
 # HPV Number Stepper
 
+## New Feature: Content Selection Control
+
+Added `allowContentSelection` option to the constructor (default: true). When false and using `renderAsHtml: true`, the display element has `user-select: none` applied to prevent text selection, treating it more like a control. The input mode always allows selection for editing.
+
+Example:
+```js
+new HpvNumberStepper({
+  // ... other options
+  renderAsHtml: true,
+  allowContentSelection: false
+});
+```
+
 A zero-dependency JavaScript library for building interactive number steppers with customizable layouts and callbacks.
 
 ![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-blue.svg)

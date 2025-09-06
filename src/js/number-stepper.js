@@ -8,7 +8,8 @@ class HpvStepperBase {
         onChange,
         renderValue = (val) => `${val}%`,
         layout = ['minus', 'input', 'plus'],
-        renderAsHtml = false
+        renderAsHtml = false,
+        allowContentSelection = true
     }) {
         this.min = min;
         this.max = max;
@@ -16,6 +17,7 @@ class HpvStepperBase {
         this.onChange = onChange;
         this.renderValue = renderValue;
         this.renderAsHtml = !!renderAsHtml;
+        this.allowContentSelection = allowContentSelection;
         this.value = this._sanitize(initialValue);
 
         this._createElements();
@@ -48,8 +50,15 @@ class HpvStepperBase {
         if (this.renderAsHtml) {
             this.display = document.createElement('span');
             this.display.className = 'stepper-display';
+            if (!this.allowContentSelection) {
+                this.display.classList.add('no-select');
+            }
             this.container.tabIndex = 0;
             this.input.classList.add('stepper-input-hidden');
+        } else {
+            if (!this.allowContentSelection) {
+                this.input.classList.add('no-select');
+            }
         }
     }
 
@@ -78,6 +87,11 @@ class HpvStepperBase {
         this.btnPlus.addEventListener('click', this._plusHandler);
         this.input.addEventListener('change', this._inputHandler);
         this.input.addEventListener('keydown', this._keydownHandler);
+
+        if (!this.allowContentSelection) {
+            this._selectStartHandler = (e) => e.preventDefault();
+            this.input.addEventListener('selectstart', this._selectStartHandler);
+        }
 
         if (this.renderAsHtml) {
             this._containerKeydownHandler = (e) => {
@@ -154,6 +168,9 @@ class HpvStepperBase {
         this.btnPlus.removeEventListener('click', this._plusHandler);
         this.input.removeEventListener('change', this._inputHandler);
         this.input.removeEventListener('keydown', this._keydownHandler);
+        if (this._selectStartHandler) {
+            this.input.removeEventListener('selectstart', this._selectStartHandler);
+        }
         if (this.renderAsHtml) {
             this.container.removeEventListener('keydown', this._containerKeydownHandler);
             this.display.removeEventListener('click', this._displayClickHandler);
