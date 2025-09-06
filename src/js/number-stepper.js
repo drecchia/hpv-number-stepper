@@ -64,8 +64,21 @@ class HpvStepperBase {
 
     // Shared event setup
     _setupEventListeners() {
+        this._setupButtonListeners();
+        this._setupInputListeners();
+        if (this.renderAsHtml) {
+            this._setupContainerListeners();
+        }
+    }
+
+    _setupButtonListeners() {
         this._minusHandler = () => this._changeValue(-this.stepSize);
         this._plusHandler = () => this._changeValue(this.stepSize);
+        this.btnMinus.addEventListener('click', this._minusHandler);
+        this.btnPlus.addEventListener('click', this._plusHandler);
+    }
+
+    _setupInputListeners() {
         this._inputHandler = () => {
             const parsed = this._parseInput(this.input.value);
             this._updateValue(parsed);
@@ -82,9 +95,6 @@ class HpvStepperBase {
                 this.input.blur();
             }
         };
-
-        this.btnMinus.addEventListener('click', this._minusHandler);
-        this.btnPlus.addEventListener('click', this._plusHandler);
         this.input.addEventListener('change', this._inputHandler);
         this.input.addEventListener('keydown', this._keydownHandler);
 
@@ -92,21 +102,21 @@ class HpvStepperBase {
             this._selectStartHandler = (e) => e.preventDefault();
             this.input.addEventListener('selectstart', this._selectStartHandler);
         }
+    }
 
-        if (this.renderAsHtml) {
-            this._containerKeydownHandler = (e) => {
-                if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    this._changeValue(this.stepSize);
-                } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    this._changeValue(-this.stepSize);
-                }
-            };
-            this._displayClickHandler = () => this.container.focus();
-            this.container.addEventListener('keydown', this._containerKeydownHandler);
-            this.display.addEventListener('click', this._displayClickHandler);
-        }
+    _setupContainerListeners() {
+        this._containerKeydownHandler = (e) => {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this._changeValue(this.stepSize);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this._changeValue(-this.stepSize);
+            }
+        };
+        this._displayClickHandler = () => this.container.focus();
+        this.container.addEventListener('keydown', this._containerKeydownHandler);
+        this.display.addEventListener('click', this._displayClickHandler);
     }
 
     // Shared layout building
@@ -120,30 +130,22 @@ class HpvStepperBase {
             elementMap.display = this.display;
         }
         const contentKey = this.renderAsHtml ? 'display' : 'input';
+        const contentIdx = layout.indexOf(contentKey);
 
         layout.forEach((key, idx) => {
-            if (elementMap[key]) {
-                const el = elementMap[key];
-                this.container.appendChild(el);
-                if (this.renderAsHtml && key === 'display' && layout[0] === 'display') {
-                    el.classList.add('stepper-display-left');
-                }
+            const el = elementMap[key];
+            if (!el) return;
 
-                if (key === 'minus') {
-                    const inputIdx = layout.indexOf(contentKey);
-                    if (idx < inputIdx) {
-                        this.btnMinus.classList.add('stepper-button-left');
-                    } else {
-                        this.btnMinus.classList.add('stepper-button-right');
-                    }
-                } else if (key === 'plus') {
-                    const inputIdx = layout.indexOf(contentKey);
-                    if (idx > inputIdx) {
-                        this.btnPlus.classList.add('stepper-button-right');
-                    } else {
-                        this.btnPlus.classList.add('stepper-button-left');
-                    }
-                }
+            this.container.appendChild(el);
+
+            if (this.renderAsHtml && key === 'display' && idx === 0) {
+                el.classList.add('stepper-display-left');
+            }
+
+            if (key === 'minus') {
+                el.classList.add(idx < contentIdx ? 'stepper-button-left' : 'stepper-button-right');
+            } else if (key === 'plus') {
+                el.classList.add(idx > contentIdx ? 'stepper-button-right' : 'stepper-button-left');
             }
         });
     }
@@ -228,6 +230,7 @@ class HpvNumberStepper extends HpvStepperBase {
     }
 
     _sanitize(val) {
+        if (val >= this.min && val <= this.max) return val;
         return Math.max(this.min, Math.min(this.max, val));
     }
 }
@@ -320,10 +323,10 @@ class HpvListStepper extends HpvStepperBase {
             return Math.max(this.min, Math.min(this.max, val));
         }
         const count = this.items.length;
-        if (count > 0) {
-            return ((Math.round(val) % count) + count) % count;
+        if (count === 0) {
+            return Math.max(this.min, Math.min(this.max, Math.round(val)));
         }
-        return Math.max(this.min, Math.min(this.max, Math.round(val)));
+        return ((Math.round(val) % count) + count) % count;
     }
 
     // List-specific methods
