@@ -353,14 +353,13 @@ class HpvListStepper extends HpvStepperBase {
     }
 
     _processDynamicInput(inputText) {
-        const searchText = inputText.trim();
-        for (let i = 0; i < this.items.length; i++) {
-            const rendered = this.renderValue(i, this);
-            const temp = document.createElement('div');
-            temp.innerHTML = rendered;
-            if (temp.textContent.trim() === searchText) {
-                return { valid: true, newValue: i };
-            }
+        const searchText = inputText.trim().toLowerCase();
+        const index = this.items.findIndex(item => {
+            const text = String(item?.[this.valueField] || '').toLowerCase();
+            return text.includes(searchText);
+        });
+        if (index >= 0) {
+            return { valid: true, newValue: index };
         }
         return null;
     }
