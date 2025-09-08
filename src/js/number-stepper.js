@@ -9,6 +9,7 @@ class HpvStepperBase {
         renderValue = (val) => `${val}`,
         layout = ['minus', 'display', 'plus'],
         allowContentSelection = true,
+        editable = false,
         renderInputValue
     }) {
         this.min = min;
@@ -18,6 +19,7 @@ class HpvStepperBase {
         this.renderValue = renderValue;
         this.allowContentSelection = allowContentSelection;
         this.renderInputValue = renderInputValue;
+        this.editable = editable;
         this.value = this._sanitize(initialValue);
 
         this._createElements();
@@ -75,9 +77,11 @@ class HpvStepperBase {
                 this._changeValue(-this.stepSize);
             }
         };
-        this._displayClickHandler = () => this._showDynamicInput();
+        if (this.editable) {
+            this._displayClickHandler = () => this._showDynamicInput();
+            this.display.addEventListener('click', this._displayClickHandler);
+        }
         this.container.addEventListener('keydown', this._containerKeydownHandler);
-        this.display.addEventListener('click', this._displayClickHandler);
     }
 
     // Shared layout building
@@ -173,6 +177,7 @@ class HpvStepperBase {
         this.dynamicInput.value = this._getInputValue() || '';
         this.container.replaceChild(this.dynamicInput, this.display);
         this.dynamicInput.focus();
+        this.dynamicInput.select();
 
         this._dynamicBlurHandler = () => this._handleDynamicInputCommit();
         this._dynamicKeyupHandler = (e) => {
