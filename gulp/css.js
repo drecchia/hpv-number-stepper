@@ -13,7 +13,7 @@ exports.all = (cb) => {
 
 const dist = {
     'files': [
-        'src/css/number-stepper.css',
+        'src/css/hpv-stepper.css',
     ],
     'outputFolder': 'dist/css',
 }

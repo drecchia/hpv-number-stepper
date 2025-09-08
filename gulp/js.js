@@ -10,7 +10,7 @@ exports.all = (cb) => {
 
 const dist = {
     'files': [
-        'src/js/number-stepper.js',
+        'src/js/hpv-stepper.js',
     ],
     'outputFolder': 'dist/js',
 }
