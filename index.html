@@ -44,44 +44,46 @@
     
     <h2>Original Number Stepper</h2>
     
-    <div class="label">Sales tax</div>
+    <div class="label">Basic Editable Number Stepper with Percentage Formatting and Custom Layout</div>
     <div id="stepper-container-root"></div>
     
-    <div class="label">Temperature (°C)</div>
+    <div class="label">Non-Editable Number Stepper with Temperature Formatting and Display-First Layout</div>
     <div id="temperature-stepper"></div>
     
-    <div class="label">Number Stepper (HTML rendering)</div>
+    <div class="label">Number Stepper with HTML Rendering and Inline Percentage Display</div>
     <div id="number-html-stepper"></div>
     
     <h2>New List Stepper</h2>
     
-    <div class="label">Select Country</div>
+    <div class="label">Basic List Stepper for Country Selection with ID Labels</div>
     <div id="country-stepper"></div>
     
-    <div class="label">Choose Product</div>
+    <div class="label">List Stepper with Custom Rendered Product Names and Prices</div>
     <div id="product-stepper"></div>
     
-    <div class="label">Select Color</div>
+    <div class="label">List Stepper with Display-First Layout for Color Selection</div>
     <div id="color-stepper"></div>
 
+    <div class="label">Editable List Stepper with Emoji Icons for Fruit Selection</div>
+    <div id="editable-fruit-stepper"></div>
     <h2>HTML Rendering Examples</h2>
     
-    <div class="label">Rich Country Selector (HTML)</div>
+    <div class="label">List Stepper with HTML Rendering Including Flags</div>
     <div id="country-html-stepper"></div>
     
-    <div class="label">Product with Images (HTML)</div>
+    <div class="label">List Stepper with HTML Rendering Using Colored Dots for Images</div>
     <div id="product-html-stepper"></div>
 
-    <div class="label">Tall Content Test (HTML)</div>
+    <div class="label">List Stepper Handling Tall Multi-Line Content in HTML Rendering</div>
     <div id="tall-content-stepper"></div>
 
-    <div class="label">Number Stepper (No Content Selection)</div>
+    <div class="label">Number Stepper with Disabled Content Selection and HTML Rendering</div>
     <div id="no-select-stepper"></div>
 
-    <div class="label">Number Stepper Input Mode (No Selection Demo)</div>
+    <div class="label">Editable Number Stepper with Disabled Content Selection</div>
     <div id="no-select-input-stepper"></div>
 
-    <div class="label">List Stepper HTML Mode (No Selection Demo)</div>
+    <div class="label">List Stepper with HTML Rendering and Disabled Content Selection</div>
     <div id="no-select-list-html-stepper"></div>
 
     <h2>Live Values</h2>
@@ -98,6 +100,7 @@
         <div>No Selection: <span id="no-select-value">-</span></div>
         <div>No Select Input: <span id="no-select-input-value">-</span></div>
         <div>No Select List HTML: <span id="no-select-list-html-value">-</span></div>
+        <div>Editable Fruit: <span id="editable-fruit-value">-</span></div>
     </div>
 
     <script src="./dist/js/all.min.js"></script>
@@ -224,7 +227,29 @@
             layout: ['display', 'minus', 'plus'] // Input first layout
         });
         colorStepper.mountTo(document.getElementById('color-stepper'));
-
+ 
+        // Editable fruit stepper
+        const fruits = [
+            { id: 'apple', label: 'Apple', emoji: '🍎' },
+            { id: 'banana', label: 'Banana', emoji: '🍌' },
+            { id: 'orange', label: 'Orange', emoji: '🍊' },
+            { id: 'grape', label: 'Grape', emoji: '🍇' },
+            { id: 'strawberry', label: 'Strawberry', emoji: '🍓' }
+        ];
+ 
+        const editableFruitStepper = new HpvListStepper({
+            items: fruits,
+            initialItem: 'apple',
+            editable: true,
+            renderAsHtml: true,
+            renderValue: (item) => `<span style="display:flex;gap:8px;"><span style="font-size:1.2em;">${item.emoji}</span>${item.label}</span>`,
+            renderInputValue: (item) => `${item.label}`,
+            onChange: (item, index) => {
+                document.getElementById('editable-fruit-value').textContent = `${item.emoji} ${item.label}`;
+            },
+            layout: ['minus', 'display', 'plus']
+        });
+        editableFruitStepper.mountTo(document.getElementById('editable-fruit-stepper'));
         // HTML rendering examples
         const countriesWithFlags = [
             { id: 'us', label: 'United States', flag: '🇺🇸' },
@@ -375,7 +400,8 @@
         document.getElementById('no-select-value').textContent = '75%';
         document.getElementById('no-select-input-value').textContent = '25%';
         document.getElementById('no-select-list-html-value').textContent = 'United States 🇺🇸';
-
+        document.getElementById('editable-fruit-value').textContent = '🍎 Apple';
+ 
         // Demo API methods
         console.log('=== API Demo ===');
         console.log('Country stepper selected item:', countryStepper.getSelectedItem());

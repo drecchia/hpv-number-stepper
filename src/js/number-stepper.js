@@ -196,14 +196,14 @@ class HpvStepperBase {
         if (result && result.valid) {
             this.setValue(result.newValue);
         }
-        this._hideDynamicInput();
+        this._hideDynamicInput(true);
     }
 
     _handleDynamicInputCancel() {
-        this._hideDynamicInput();
+        this._hideDynamicInput(false);
     }
 
-    _hideDynamicInput() {
+    _hideDynamicInput(skipUpdate = false) {
         if (this.dynamicInput) {
             this.dynamicInput.removeEventListener('blur', this._dynamicBlurHandler);
             this.dynamicInput.removeEventListener('keyup', this._dynamicKeyupHandler);
@@ -211,7 +211,9 @@ class HpvStepperBase {
             this.dynamicInput = null;
         }
         this.display.style.display = '';
-        this._updateValue(this.value);
+        if (!skipUpdate) {
+            this._updateValue(this.value);
+        }
     }
 
     _processDynamicInput(inputText) {
