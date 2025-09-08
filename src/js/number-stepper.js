@@ -6,18 +6,18 @@ class HpvStepperBase {
         stepSize = 1,
         onCreate,
         onChange,
-        renderValue = (val) => `${val}%`,
-        layout = ['minus', 'input', 'plus'],
-        renderAsHtml = false,
-        allowContentSelection = true
+        renderValue = (val) => `${val}`,
+        layout = ['minus', 'display', 'plus'],
+        allowContentSelection = true,
+        renderInputValue
     }) {
         this.min = min;
         this.max = max;
         this.stepSize = stepSize;
         this.onChange = onChange;
         this.renderValue = renderValue;
-        this.renderAsHtml = !!renderAsHtml;
         this.allowContentSelection = allowContentSelection;
+        this.renderInputValue = renderInputValue;
         this.value = this._sanitize(initialValue);
 
         this._createElements();
@@ -39,36 +39,22 @@ class HpvStepperBase {
         this.btnMinus.textContent = '−';
         this.btnMinus.className = 'stepper-button';
 
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.input.className = 'stepper-input';
-
         this.btnPlus = document.createElement('button');
         this.btnPlus.textContent = '+';
         this.btnPlus.className = 'stepper-button';
 
-        if (this.renderAsHtml) {
-            this.display = document.createElement('span');
-            this.display.className = 'stepper-display';
-            if (!this.allowContentSelection) {
-                this.display.classList.add('no-select');
-            }
-            this.container.tabIndex = 0;
-            this.input.classList.add('stepper-input-hidden');
-        } else {
-            if (!this.allowContentSelection) {
-                this.input.classList.add('no-select');
-            }
+        this.display = document.createElement('span');
+        this.display.className = 'stepper-display';
+        if (!this.allowContentSelection) {
+            this.display.classList.add('no-select');
         }
+        this.container.tabIndex = 0;
     }
 
     // Shared event setup
     _setupEventListeners() {
         this._setupButtonListeners();
-        this._setupInputListeners();
-        if (this.renderAsHtml) {
-            this._setupContainerListeners();
-        }
+        this._setupContainerListeners();
     }
 
     _setupButtonListeners() {
@@ -78,31 +64,6 @@ class HpvStepperBase {
         this.btnPlus.addEventListener('click', this._plusHandler);
     }
 
-    _setupInputListeners() {
-        this._inputHandler = () => {
-            const parsed = this._parseInput(this.input.value);
-            this._updateValue(parsed);
-        };
-        this._keydownHandler = (e) => {
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                this._changeValue(this.stepSize);
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                this._changeValue(-this.stepSize);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                this.input.blur();
-            }
-        };
-        this.input.addEventListener('change', this._inputHandler);
-        this.input.addEventListener('keydown', this._keydownHandler);
-
-        if (!this.allowContentSelection) {
-            this._selectStartHandler = (e) => e.preventDefault();
-            this.input.addEventListener('selectstart', this._selectStartHandler);
-        }
-    }
 
     _setupContainerListeners() {
         this._containerKeydownHandler = (e) => {
@@ -114,7 +75,7 @@ class HpvStepperBase {
                 this._changeValue(-this.stepSize);
             }
         };
-        this._displayClickHandler = () => this.container.focus();
+        this._displayClickHandler = () => this._showDynamicInput();
         this.container.addEventListener('keydown', this._containerKeydownHandler);
         this.display.addEventListener('click', this._displayClickHandler);
     }
@@ -123,13 +84,10 @@ class HpvStepperBase {
     _buildLayout(layout) {
         const elementMap = {
             minus: this.btnMinus,
-            input: this.input,
+            display: this.display,
             plus: this.btnPlus,
         };
-        if (this.renderAsHtml) {
-            elementMap.display = this.display;
-        }
-        const contentKey = this.renderAsHtml ? 'display' : 'input';
+        const contentKey = 'display';
         const contentIdx = layout.indexOf(contentKey);
 
         layout.forEach((key, idx) => {
@@ -138,7 +96,7 @@ class HpvStepperBase {
 
             this.container.appendChild(el);
 
-            if (this.renderAsHtml && key === 'display' && idx === 0) {
+            if (key === 'display' && idx === 0) {
                 el.classList.add('stepper-display-left');
             }
 
@@ -168,15 +126,12 @@ class HpvStepperBase {
         // Remove listeners and clean up (shared logic)
         this.btnMinus.removeEventListener('click', this._minusHandler);
         this.btnPlus.removeEventListener('click', this._plusHandler);
-        this.input.removeEventListener('change', this._inputHandler);
-        this.input.removeEventListener('keydown', this._keydownHandler);
-        if (this._selectStartHandler) {
-            this.input.removeEventListener('selectstart', this._selectStartHandler);
+        if (this.dynamicInput) {
+            this.dynamicInput.removeEventListener('blur', this._dynamicBlurHandler);
+            this.dynamicInput.removeEventListener('keyup', this._dynamicKeyupHandler);
         }
-        if (this.renderAsHtml) {
-            this.container.removeEventListener('keydown', this._containerKeydownHandler);
-            this.display.removeEventListener('click', this._displayClickHandler);
-        }
+        this.container.removeEventListener('keydown', this._containerKeydownHandler);
+        this.display.removeEventListener('click', this._displayClickHandler);
 
         if (this.container.parentNode) {
             this.container.parentNode.removeChild(this.container);
@@ -185,24 +140,81 @@ class HpvStepperBase {
         this.container = null;
         this.btnMinus = null;
         this.btnPlus = null;
-        this.input = null;
         this.display = null;
+        this.dynamicInput = null;
         this.onChange = null;
         this.renderValue = null;
+        this.renderInputValue = null;
     }
 
     _updateValue(newVal) {
         const sanitized = this._sanitize(newVal);
         this.value = sanitized;
-        if (this.renderAsHtml) {
-            this.display.innerHTML = this.renderValue(sanitized, this);
-        } else {
-            this.input.value = this.renderValue(sanitized, this);
-        }
+        this.display.innerHTML = this.renderValue(sanitized, this);
 
         if (typeof this.onChange === 'function') {
             this.onChange(sanitized, this);
         }
+    }
+
+    _getInputValue() {
+        if (this.renderInputValue) {
+            return this.renderInputValue(this.value, this);
+        } else {
+            return this._getDefaultInputValue();
+        }
+    }
+
+    _showDynamicInput() {
+        this.display.style.display = 'none';
+        this.dynamicInput = document.createElement('input');
+        this.dynamicInput.type = 'text';
+        this.dynamicInput.className = 'stepper-input-dynamic';
+        this.dynamicInput.value = this._getInputValue() || '';
+        this.container.replaceChild(this.dynamicInput, this.display);
+        this.dynamicInput.focus();
+
+        this._dynamicBlurHandler = () => this._handleDynamicInputCommit();
+        this._dynamicKeyupHandler = (e) => {
+            if (e.keyCode === 13) {
+                this._handleDynamicInputCommit();
+            } else if (e.keyCode === 27) {
+                this._handleDynamicInputCancel();
+            }
+        };
+        this.dynamicInput.addEventListener('blur', this._dynamicBlurHandler);
+        this.dynamicInput.addEventListener('keyup', this._dynamicKeyupHandler);
+    }
+
+    _handleDynamicInputCommit() {
+        const result = this._processDynamicInput(this.dynamicInput.value);
+        if (result && result.valid) {
+            this.setValue(result.newValue);
+        }
+        this._hideDynamicInput();
+    }
+
+    _handleDynamicInputCancel() {
+        this._hideDynamicInput();
+    }
+
+    _hideDynamicInput() {
+        if (this.dynamicInput) {
+            this.dynamicInput.removeEventListener('blur', this._dynamicBlurHandler);
+            this.dynamicInput.removeEventListener('keyup', this._dynamicKeyupHandler);
+            this.container.replaceChild(this.display, this.dynamicInput);
+            this.dynamicInput = null;
+        }
+        this.display.style.display = '';
+        this._updateValue(this.value);
+    }
+
+    _processDynamicInput(inputText) {
+        throw new Error('Abstract method _processDynamicInput must be implemented');
+    }
+
+    _getDefaultInputValue() {
+        throw new Error('Abstract method _getDefaultInputValue must be implemented');
     }
 
     _changeValue(delta) {
@@ -222,6 +234,18 @@ class HpvStepperBase {
 class HpvNumberStepper extends HpvStepperBase {
     constructor(options) {
         super(options);
+    }
+
+    _getDefaultInputValue() {
+        return this.value.toString();
+    }
+
+    _processDynamicInput(inputText) {
+        const num = parseFloat(inputText);
+        if (!isNaN(num) && num >= this.min && num <= this.max) {
+            return { valid: true, newValue: num };
+        }
+        return null;
     }
 
     _parseInput(inputText) {
@@ -281,11 +305,7 @@ class HpvListStepper extends HpvStepperBase {
         this.renderValue = wrappedRenderValue;
 
         // Manually update display for initial render without calling onChange
-        if (this.renderAsHtml) {
-            this.display.innerHTML = this.renderValue(this.value, this);
-        } else {
-            this.input.value = this.renderValue(this.value, this);
-        }
+        this.display.innerHTML = this.renderValue(this.value, this);
 
         // Manually call onCreate
         if (typeof userOnCreate === 'function') {
@@ -307,6 +327,35 @@ class HpvListStepper extends HpvStepperBase {
         }
         const idx = items.findIndex(it => it && it[keyField] === initialItem);
         return idx >= 0 ? idx : 0;
+    }
+
+    _getInputValue() {
+        const item = this.getSelectedItem();
+        if (this.renderInputValue) {
+            return this.renderInputValue(item, this);
+        } else {
+            return this._getDefaultInputValue();
+        }
+    }
+
+    _getDefaultInputValue() {
+        const rendered = this.renderValue(this.value, this);
+        const temp = document.createElement('div');
+        temp.innerHTML = rendered;
+        return temp.textContent ? temp.textContent.trim() : '';
+    }
+
+    _processDynamicInput(inputText) {
+        const searchText = inputText.trim();
+        for (let i = 0; i < this.items.length; i++) {
+            const rendered = this.renderValue(i, this);
+            const temp = document.createElement('div');
+            temp.innerHTML = rendered;
+            if (temp.textContent.trim() === searchText) {
+                return { valid: true, newValue: i };
+            }
+        }
+        return null;
     }
 
     _parseInput(inputText) {

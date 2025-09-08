@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Number Stepper</title>
-    <link rel="stylesheet" href="./src/css/number-stepper.css" />
+    <link rel="stylesheet" href="./dist/css/all.css" />
     <style>
         /* Demo page styles */
         body {
@@ -100,7 +100,7 @@
         <div>No Select List HTML: <span id="no-select-list-html-value">-</span></div>
     </div>
 
-    <script src="./src/js/number-stepper.js"></script>
+    <script src="./dist/js/all.min.js"></script>
     <script>
         // Example usage - Original Number Stepper
         const root = document.getElementById('stepper-container-root');
@@ -115,7 +115,7 @@
                 document.getElementById('sales-value').textContent = `${val.toFixed(1)}%`;
             },
             renderValue: (val, instance) => `${val.toFixed(1)} %`,
-            layout: [ 'minus', 'input', 'plus' ] // Change element order
+            layout: [ 'minus', 'display', 'plus' ] // Change element order
         });
         stepper.mountTo(root);
         
@@ -129,7 +129,7 @@
                 document.getElementById('temp-value').textContent = `${val}°C`;
             },
             renderValue: (val) => `${val}°C`,
-            layout: ['input', 'minus', 'plus'] // Input first
+            layout: ['display', 'minus', 'plus'] // Input first
         });
         tempStepper.mountTo(document.getElementById('temperature-stepper'));
         
@@ -175,7 +175,7 @@
                 console.log('Country selected:', item, index);
                 document.getElementById('country-value').textContent = `${item.label} (${item.id})`;
             },
-            layout: ['minus', 'input', 'plus']
+            layout: ['minus', 'display', 'plus']
         });
         countryStepper.mountTo(document.getElementById('country-stepper'));
         
@@ -196,7 +196,7 @@
                 console.log('Product selected:', item, index);
                 document.getElementById('product-value').textContent = `${item.label} ($${item.price})`;
             },
-            layout: ['minus', 'input', 'plus']
+            layout: ['minus', 'display', 'plus']
         });
 
         productStepper.mountTo(document.getElementById('product-stepper'));
@@ -219,7 +219,7 @@
                 document.getElementById('color-value').textContent = item.label;
                 document.getElementById('color-value').style.color = item.id;
             },
-            layout: ['input', 'minus', 'plus'] // Input first layout
+            layout: ['display', 'minus', 'plus'] // Input first layout
         });
         colorStepper.mountTo(document.getElementById('color-stepper'));
 
@@ -341,7 +341,7 @@
                 document.getElementById('no-select-input-value').textContent = `${val}%`;
             },
             renderValue: (val) => `${val}%`,
-            layout: ['minus', 'input', 'plus']
+            layout: ['minus', 'display', 'plus']
         });
         noSelectInputStepper.mountTo(document.getElementById('no-select-input-stepper'));
 

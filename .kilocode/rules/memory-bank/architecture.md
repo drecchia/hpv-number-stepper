@@ -35,6 +35,15 @@ The HPV Number Stepper is a zero-dependency JavaScript library built with a modu
 - Customizable value formatting through callback functions
 - Content selection control for different use cases
 
+### Always-on HTML Rendering with Dynamic Editing
+- Hardcoded `renderAsHtml` enabled (no toggling option)
+- Always uses `.stepper-display` mode, ignoring input-related options
+- Click handler on display creates dynamic input (`type="text"`, `class="stepper-input-dynamic"`) for editing
+- Optional `renderInputValue` callback for plain text extraction (default: raw value for numbers, HTML stripping via `textContent` or regex replace for lists)
+- Auto-focus on dynamic input with events for Enter/Blur to parse and update value (`parseFloat` for numbers, text match for list index)
+- Escape key to cancel and re-render original display
+- CSS updated for `.stepper-input-dynamic` to match display styles seamlessly
+
 ## Design Patterns
 
 ### Template Method Pattern
@@ -44,6 +53,7 @@ The HPV Number Stepper is a zero-dependency JavaScript library built with a modu
 ### Observer Pattern
 - Event callbacks (`onCreate`, `onChange`, `onRender`) for external integration
 - Allows components to react to stepper state changes
+- Extended to handle dynamic input events including click on display, keydown for Enter/Escape, and blur events
 
 ### Factory Pattern
 - Constructor-based instantiation with configuration objects
@@ -83,6 +93,7 @@ src/css/*.css → gulp/css.js →  dist/css/all.css
 4. Layout is built according to configuration
 5. Initial value is set and displayed
 6. `onCreate` callback is triggered
+7. Setup display-only mode with click handler for dynamic input creation
 
 ### Value Change Flow
 1. User interaction (click/keyboard) triggers event
@@ -90,11 +101,13 @@ src/css/*.css → gulp/css.js →  dist/css/all.css
 3. Internal state is updated
 4. Display is refreshed
 5. `onChange` callback is triggered
+6. If change originates from dynamic input, handle parsing (`parseFloat` for numbers, text match for lists), update state, and re-render display with HTML
 
 ### Cleanup Flow
 1. All event listeners are removed
 2. DOM elements are detached
 3. References are nullified for garbage collection
+4. Remove dynamic input event listeners if a dynamic input is active
 
 ### Build Process
 1. Source files are collected

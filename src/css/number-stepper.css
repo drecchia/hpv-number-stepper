@@ -75,6 +75,34 @@
         overflow-wrap: break-word;
     }
 
+    & .stepper-input-dynamic {
+        display: flex;
+        padding: 0.5em 0.75em;
+        width: 100%;
+        text-align: center;
+        font-size: 1em;
+        line-height: 1.2;
+        min-height: 1.5em;
+        box-sizing: border-box;
+        align-items: center;
+        justify-content: center;
+        flex-grow: 1;
+        align-self: stretch;
+        overflow-wrap: break-word;
+        border: none;
+        background: transparent;
+        color: inherit;
+        font-family: inherit;
+    }
+
+    & .stepper-input-dynamic:focus {
+        outline: none;
+    }
+
+    & .stepper-input-dynamic-left {
+        text-align: left;
+    }
+
     & .stepper-display-left {
         text-align: left;
     }
